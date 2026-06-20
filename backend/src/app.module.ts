@@ -24,6 +24,15 @@ import { ProjectStagesModule } from './modules/project-stages/project-stages.mod
 import { ProjectTasksModule } from './modules/project-tasks/project-tasks.module';
 import { TaskParticipantsModule } from './modules/task-participants/task-participants.module';
 import { TaskSubmissionsModule } from './modules/task-submissions/task-submissions.module';
+import { TaskReviewsModule } from './modules/task-reviews/task-reviews.module';
+import { CompanySettingsModule } from './modules/company-settings/company-settings.module';
+import { WorkLogHeaderModule } from './modules/work-log-header/work-log-header.module';
+import { WorkLogLineModule } from './modules/work-log-line/work-log-line.module';
+import { WorkCategoryModule } from './modules/work-category/work-category.module';
+import { TaskWorkSessionModule } from './modules/task-work-session/task-work-session.module';
+import { WorkScheduleModule } from './modules/work-schedule/work-schedule.module';
+import { WorkScheduleItemModule } from './modules/work-schedule-item/work-schedule-item.module';
+import { ApprovalModule } from './modules/approval/approval.module';
 
 @Module({
   imports: [
@@ -54,6 +63,15 @@ import { TaskSubmissionsModule } from './modules/task-submissions/task-submissio
     ProjectTasksModule,
     TaskParticipantsModule,
     TaskSubmissionsModule,
+    TaskReviewsModule,
+    CompanySettingsModule,
+    WorkLogHeaderModule,
+    WorkLogLineModule,
+    WorkCategoryModule,
+    TaskWorkSessionModule,
+    WorkScheduleModule,
+    WorkScheduleItemModule,
+    ApprovalModule,
   ],
 })
 export class AppModule {}

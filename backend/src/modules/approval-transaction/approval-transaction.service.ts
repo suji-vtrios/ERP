@@ -53,7 +53,7 @@ export class ApprovalTransactionService {
       include: {
         workflow: true,
         requestedBy: true,
-        approvals: true,
+        approvalSteps: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -68,7 +68,7 @@ export class ApprovalTransactionService {
         include: {
           workflow: true,
           requestedBy: true,
-          approvals: true,
+          approvalSteps: true,
         },
       });
 

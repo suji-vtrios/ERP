@@ -51,6 +51,9 @@ model Company {
   employeeAssignments EmployeeCompanyAssignment[]
   documentTemplates   DocumentTemplate[]
   projects            Project[]
+  workCategories      WorkCategory[]
+  taskTypes           TaskType[]
+  companySettings     CompanySetting[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -150,8 +153,17 @@ model Employee {
   taskSubmissions  TaskSubmission[]            @relation("TaskSubmissionEmployee")
   taskAssignments  TaskAssignmentHistory[]     @relation("TaskAssignmentEmployee")
 
-  taskAssignedBy      TaskAssignmentHistory[] @relation("TaskAssignedByEmployee")
-  previousAssignments TaskAssignmentHistory[] @relation("TaskPreviousEmployee")
+  taskAssignedBy            TaskAssignmentHistory[]    @relation("TaskAssignedByEmployee")
+  previousAssignments       TaskAssignmentHistory[]    @relation("TaskPreviousEmployee")
+  taskReviews               TaskReview[]               @relation("TaskReviewer")
+  projectAllocationsCreated ProjectTeamMember[]        @relation("ProjectTeamMemberAssignedBy")
+  allocationChanges         ProjectTeamMemberHistory[]
+  workSchedules             WorkSchedule[]
+  workScheduleItems         WorkScheduleItem[]
+  taskWorkSessions          TaskWorkSession[]
+  workLogs                  WorkLogHeader[]
+
+  assignedWorkScheduleItems WorkScheduleItem[] @relation("WorkScheduleAssignedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -380,7 +392,8 @@ model ApprovalTransaction {
 
   workflow ApprovalWorkflow @relation(fields: [workflowId], references: [id])
 
-  approvals ApprovalTransactionStep[]
+  approvalSteps ApprovalTransactionStep[]
+  workLogHeaders WorkLogHeader[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -496,10 +509,19 @@ model ProjectTeamMember {
   startDate DateTime?
   endDate   DateTime?
 
+  assignedById String?
+
   isActive Boolean @default(true)
 
-  project  Project  @relation(fields: [projectId], references: [id])
-  employee Employee @relation(fields: [employeeId], references: [id])
+  allocationSource String? // MANUAL, BID_PLAN, REALLOCATION
+
+  allocationStatus String @default("ACTIVE")
+
+  remarks String?
+
+  project    Project   @relation(fields: [projectId], references: [id])
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  assignedBy Employee? @relation("ProjectTeamMemberAssignedBy", fields: [assignedById], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -507,6 +529,41 @@ model ProjectTeamMember {
   @@index([projectId])
   @@index([employeeId])
   @@map("project_team_members")
+}
+
+model ProjectTeamMemberHistory {
+  id String @id @default(uuid())
+
+  projectTeamMemberId String
+
+  projectId  String
+  employeeId String
+
+  oldRole   String?
+  newRole   String?
+  changedBy Employee? @relation(fields: [employeeId], references: [id])
+
+  oldAllocationPercentage Decimal?
+  newAllocationPercentage Decimal?
+
+  oldStartDate DateTime?
+  newStartDate DateTime?
+
+  oldEndDate DateTime?
+  newEndDate DateTime?
+
+  action String
+
+  remarks String?
+
+  changedById String?
+
+  changedAt DateTime @default(now())
+
+  @@index([projectTeamMemberId])
+  @@index([projectId])
+  @@index([employeeId])
+  @@map("project_team_member_history")
 }
 
 model ProjectStage {
@@ -542,8 +599,12 @@ model ProjectTask {
   projectId String
   stageId   String
 
-  taskCode String @unique
+  taskCode String
   taskName String
+
+  taskTypeId String?
+
+  parentTaskId String?
 
   description String?
 
@@ -558,12 +619,19 @@ model ProjectTask {
 
   status String @default("OPEN")
 
-  project Project @relation(fields: [projectId], references: [id])
+  project           Project            @relation(fields: [projectId], references: [id])
+  workScheduleItems WorkScheduleItem[]
 
   stage             ProjectStage            @relation(fields: [stageId], references: [id])
   participants      TaskParticipant[]
   submissions       TaskSubmission[]
   assignmentHistory TaskAssignmentHistory[]
+  taskType          TaskType?               @relation(fields: [taskTypeId], references: [id])
+
+  parentTask   ProjectTask?  @relation("TaskHierarchy", fields: [parentTaskId], references: [id])
+  workLogLines WorkLogLine[]
+
+  subTasks ProjectTask[] @relation("TaskHierarchy")
 
   createdBy String?
   updatedBy String?
@@ -576,6 +644,35 @@ model ProjectTask {
   @@index([stageId])
   @@index([status])
   @@map("project_tasks")
+}
+
+model TaskType {
+  id String @id @default(uuid())
+
+  companyId String?
+
+  taskTypeCode String
+  taskTypeName String
+
+  description String?
+
+  defaultPlannedHours Decimal?
+
+  estimatedComplexity String?
+
+  isBillable Boolean @default(true)
+
+  isActive Boolean @default(true)
+
+  company Company? @relation(fields: [companyId], references: [id])
+
+  tasks ProjectTask[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, taskTypeCode])
+  @@map("task_types")
 }
 
 model TaskParticipant {
@@ -625,7 +722,8 @@ model TaskSubmission {
 
   task ProjectTask @relation(fields: [taskId], references: [id])
 
-  submittedBy Employee @relation("TaskSubmissionEmployee", fields: [submittedById], references: [id])
+  submittedBy Employee     @relation("TaskSubmissionEmployee", fields: [submittedById], references: [id])
+  reviews     TaskReview[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -678,24 +776,238 @@ model TaskReview {
   comments String?
 
   reviewHours Decimal? @default(0)
+  reviewRound Int      @default(1)
 
   reviewedAt DateTime @default(now())
 
-  submission TaskSubmission @relation(
-    fields: [submissionId],
-    references: [id]
-  )
+  submission TaskSubmission @relation(fields: [submissionId], references: [id])
 
-  reviewer Employee @relation(
-    "TaskReviewer",
-    fields: [reviewerId],
-    references: [id]
-  )
+  reviewer Employee @relation("TaskReviewer", fields: [reviewerId], references: [id])
 
   createdAt DateTime @default(now())
 
   @@index([submissionId])
   @@index([reviewerId])
-
   @@map("task_reviews")
+}
+
+model WorkCategory {
+  id String @id @default(uuid())
+
+  categoryCode String
+  categoryName String
+  companyId    String?
+
+  isBillable Boolean @default(true)
+
+  isActive Boolean @default(true)
+
+  company           Company?           @relation(fields: [companyId], references: [id])
+  workScheduleItems WorkScheduleItem[]
+  workLogLines      WorkLogLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, categoryCode])
+}
+
+model WorkSchedule {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  startDate DateTime
+  endDate   DateTime
+
+  status String @default("DRAFT")
+
+  remarks String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  items WorkScheduleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@map("work_schedules")
+}
+
+model WorkScheduleItem {
+  id String @id @default(uuid())
+
+  workScheduleId String
+
+  workDate DateTime
+
+  taskId String?
+
+  workCategoryId String?
+  employeeId     String
+
+  title String
+
+  description String?
+
+  plannedHours Decimal @default(0)
+
+  sourceType   String?
+  parentItemId String?
+  assignedById String?
+  sequenceNo   Int?
+
+  priority String @default("MEDIUM")
+
+  status           String    @default("PLANNED")
+  plannedStartTime DateTime?
+  plannedEndTime   DateTime?
+
+  workSchedule WorkSchedule @relation(fields: [workScheduleId], references: [id])
+
+  task ProjectTask? @relation(fields: [taskId], references: [id])
+
+  workCategory WorkCategory?     @relation(fields: [workCategoryId], references: [id])
+  parentItem   WorkScheduleItem? @relation("WorkScheduleItemHierarchy", fields: [parentItemId], references: [id])
+
+  childItems   WorkScheduleItem[] @relation("WorkScheduleItemHierarchy")
+  employee     Employee           @relation(fields: [employeeId], references: [id])
+  assignedBy   Employee?          @relation("WorkScheduleAssignedBy", fields: [assignedById], references: [id])
+  workSessions TaskWorkSession[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workScheduleId])
+  @@index([taskId, workDate])
+  @@index([parentItemId])
+  @@index([employeeId])
+  @@index([assignedById])
+  @@index([status])
+  @@map("work_schedule_items")
+}
+
+model TaskWorkSession {
+  id String @id @default(uuid())
+
+  workScheduleItemId String
+
+  employeeId String
+
+  startedAt DateTime
+
+  endedAt DateTime?
+
+  detectedHours Decimal @default(0)
+
+  confirmedHours Decimal @default(0)
+
+  adjustmentRemarks String?
+
+  status String @default("ACTIVE")
+
+  workScheduleItem WorkScheduleItem @relation(fields: [workScheduleItemId], references: [id])
+
+  employee     Employee      @relation(fields: [employeeId], references: [id])
+  workLogLines WorkLogLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([workScheduleItemId])
+  @@index([status])
+  @@map("task_work_sessions")
+}
+
+model CompanySetting {
+  id String @id @default(uuid())
+
+  companyId String
+
+  settingKey String
+
+  settingValue String
+
+  description String?
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, settingKey])
+  @@index([companyId])
+  @@map("company_settings")
+}
+
+model WorkLogHeader {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  startDate DateTime
+  endDate   DateTime
+
+  totalHours Decimal @default(0)
+
+  status String @default("DRAFT")
+
+  submittedAt DateTime?
+  approvedAt  DateTime?
+
+  approvalTransactionId String?
+
+  approvalTransaction ApprovalTransaction? @relation(fields: [approvalTransactionId], references: [id])
+
+  remarks String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  lines WorkLogLine[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, startDate, endDate])
+  @@index([status])
+  @@index([approvalTransactionId])
+  @@map("work_log_headers")
+}
+
+model WorkLogLine {
+  id String @id @default(uuid())
+
+  workLogHeaderId String
+
+  workDate DateTime
+
+  taskId            String?
+  taskWorkSessionId String?
+
+  workCategoryId String?
+
+  hours      Decimal @default(0)
+  sourceType String?
+
+  remarks String?
+
+  workLogHeader WorkLogHeader @relation(fields: [workLogHeaderId], references: [id])
+
+  task ProjectTask? @relation(fields: [taskId], references: [id])
+
+  workCategory    WorkCategory?    @relation(fields: [workCategoryId], references: [id])
+  taskWorkSession TaskWorkSession? @relation(fields: [taskWorkSessionId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workLogHeaderId])
+  @@index([taskId])
+  @@index([workCategoryId])
+  @@index([workDate])
+  @@index([sourceType])
+  @@index([taskWorkSessionId])
+  @@map("work_log_lines")
 }
