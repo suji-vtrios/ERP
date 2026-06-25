@@ -1,16 +1,19 @@
 "use client";
 
-import { ThemeProvider } from "./theme-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryProvider } from "./query-provider";
+import { ThemeProvider } from "./theme-provider";
 
-export function AppProvider({
-  children,
-}: {
+interface AppProviderProps {
   children: React.ReactNode;
-}) {
+}
+
+export function AppProvider({ children }: AppProviderProps) {
   return (
     <ThemeProvider>
-      <QueryProvider>{children}</QueryProvider>
+      <QueryProvider>
+        <TooltipProvider>{children}</TooltipProvider>
+      </QueryProvider>
     </ThemeProvider>
   );
 }
