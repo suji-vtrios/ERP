@@ -33,6 +33,35 @@ import { TaskWorkSessionModule } from './modules/task-work-session/task-work-ses
 import { WorkScheduleModule } from './modules/work-schedule/work-schedule.module';
 import { WorkScheduleItemModule } from './modules/work-schedule-item/work-schedule-item.module';
 import { ApprovalModule } from './modules/approval/approval.module';
+import { HolidayModule } from './modules/holiday/holiday.module';
+import { LeaveTypeModule } from './modules/leave-type/leave-type.module';
+import { LeavePolicyModule } from './modules/leave-policy/leave-policy.module';
+import { EmployeeLeaveBalanceModule } from './modules/employee-leave-balance/employee-leave-balance.module';
+import { LeaveRequestModule } from './modules/leave-request/leave-request.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
+import { EmployeeSeparationModule } from './modules/employee-separation/employee-separation.module';
+import { ShiftModule } from './modules/shift/shift.module';
+import { EmployeeShiftModule } from './modules/employee-shift/employee-shift.module';
+import { AssetTypeModule } from './modules/asset-type/asset-type.module';
+import { AssetModule } from './modules/asset/asset.module';
+import { EmployeeAssetModule } from './modules/employee-asset/employee-asset.module';
+import { EmployeeDocumentTypeModule } from './modules/employee-document-type/employee-document-type.module';
+import { EmployeeDocumentModule } from './modules/employee-document/employee-document.module';
+import { EmployeeClearanceModule } from './modules/employee-clearance/employee-clearance.module';
+import { ResourceTypesModule } from './modules/resource-types/resource-types.module';
+import { ResourcesModule } from './modules/resources/resources.module';
+import { EmployeeResourcesModule } from './modules/employee-resources/employee-resources.module';
+import { OnboardingTemplateModule } from './modules/onboarding-template/onboarding-template.module';
+import { OnboardingTemplateTaskModule } from './modules/onboarding-template-task/onboarding-template-task.module';
+import { EmployeeOnboardingModule } from './modules/employee-onboarding/employee-onboarding.module';
+import { EmployeeOnboardingTaskModule } from './modules/employee-onboarding-task/employee-onboarding-task.module';
+import { SalaryComponentModule } from './modules/salary-component/salary-component.module';
+import { EmployeeSalaryModule } from './modules/employee-salary/employee-salary.module';
+import { EmployeeTaxProfileModule } from './modules/employee-tax-profile/employee-tax-profile.module';
+import { EmployeeDeductionModule } from './modules/employee-deduction/employee-deduction.module';
+import { PayrollRunModule } from './modules/payroll-run/payroll-run.module';
+import { PayrollDashboardModule } from './modules/payroll-dashboard/payroll-dashboard.module';
+
 
 @Module({
   imports: [
@@ -72,6 +101,34 @@ import { ApprovalModule } from './modules/approval/approval.module';
     WorkScheduleModule,
     WorkScheduleItemModule,
     ApprovalModule,
+    HolidayModule,
+    LeaveTypeModule,
+    LeavePolicyModule,
+    EmployeeLeaveBalanceModule,
+    LeaveRequestModule,
+    AttendanceModule,
+    EmployeeSeparationModule,
+    ShiftModule,
+    EmployeeShiftModule,
+    AssetTypeModule,
+    AssetModule,
+    EmployeeAssetModule,
+    EmployeeDocumentTypeModule,
+    EmployeeDocumentModule,
+    EmployeeClearanceModule,
+    ResourceTypesModule,
+    ResourcesModule,
+    EmployeeResourcesModule,
+    OnboardingTemplateModule,
+    OnboardingTemplateTaskModule,
+    EmployeeOnboardingModule,
+    EmployeeOnboardingTaskModule,
+    SalaryComponentModule,
+    EmployeeSalaryModule,
+    EmployeeTaxProfileModule,
+    EmployeeDeductionModule,
+    PayrollRunModule,
+    PayrollDashboardModule,
   ],
 })
 export class AppModule {}

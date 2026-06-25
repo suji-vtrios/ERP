@@ -54,6 +54,25 @@ model Company {
   workCategories      WorkCategory[]
   taskTypes           TaskType[]
   companySettings     CompanySetting[]
+  holidays            Holiday[]
+  leaveTypes          LeaveType[]
+  leavePolicies       LeavePolicy[]
+  documentTypes       EmployeeDocumentType[]
+  resourceTypes       ResourceType[]
+  resources           Resource[]
+  employeeResources   EmployeeResource[]
+
+  assetTypes AssetType[]
+  assets     Asset[]
+
+  onboardingTemplates OnboardingTemplate[]
+  employeeOnboardings EmployeeOnboarding[]
+
+  salaryComponents    SalaryComponent[]
+  employeeSalaries    EmployeeSalary[]
+  employeeTaxProfiles EmployeeTaxProfile[]
+  employeeDeductions  EmployeeDeduction[]
+  payrollRuns         PayrollRun[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,9 +92,11 @@ model Branch {
 
   company Company @relation(fields: [companyId], references: [id])
 
-  departments Department[]
-  employees   Employee[]
-  projects    Project[]
+  departments   Department[]
+  employees     Employee[]
+  projects      Project[]
+  holidays      Holiday[]
+  leavePolicies LeavePolicy[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -97,7 +118,8 @@ model Department {
   company Company @relation(fields: [companyId], references: [id])
   branch  Branch  @relation(fields: [branchId], references: [id])
 
-  employees Employee[]
+  employees     Employee[]
+  leavePolicies LeavePolicy[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -162,11 +184,29 @@ model Employee {
   workScheduleItems         WorkScheduleItem[]
   taskWorkSessions          TaskWorkSession[]
   workLogs                  WorkLogHeader[]
+  leaveBalances             EmployeeLeaveBalance[]
+  leaveRequests             LeaveRequest[]
+  employeeShifts            EmployeeShift[]
+  documents                 EmployeeDocument[]
+  employeeResources         EmployeeResource[]
+
+  employeeSalaries   EmployeeSalary[]
+  taxProfiles        EmployeeTaxProfile[]
+  employeeDeductions EmployeeDeduction[]
+  payrollRuns        PayrollRunEmployee[]
+
+  employeeAssets      EmployeeAsset[]
+  employeeOnboardings EmployeeOnboarding[]
+
+  assignedAssets EmployeeAsset[] @relation("EmployeeAssetAssignedBy")
+
+  returnedAssets EmployeeAsset[] @relation("EmployeeAssetReturnedBy")
 
   assignedWorkScheduleItems WorkScheduleItem[] @relation("WorkScheduleAssignedBy")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  attendances Attendance[]
 
   @@index([employmentStatus])
   @@map("employees")
@@ -178,18 +218,39 @@ model EmployeeSeparation {
   employeeId String
 
   separationType String
+  // RESIGNATION
+  // TERMINATION
+  // RETIREMENT
+
+  status String @default("SUBMITTED")
+  // SUBMITTED
+  // APPROVED
+  // REJECTED
+  // COMPLETED
 
   resignationDate DateTime?
   lastWorkingDate DateTime?
 
   reason String?
 
+  approvalTransactionId String?
+
   approvedById String?
 
-  employee Employee @relation(fields: [employeeId], references: [id])
+  completedById String?
+
+  completedDate DateTime?
+
+  clearanceRemarks String?
+
+  employee  Employee           @relation(fields: [employeeId], references: [id])
+  clearance EmployeeClearance?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
+  @@index([employeeId])
+  @@index([status])
   @@map("employee_separations")
 }
 
@@ -245,7 +306,8 @@ model Designation {
 
   isActive Boolean @default(true)
 
-  employees Employee[]
+  employees     Employee[]
+  leavePolicies LeavePolicy[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -383,6 +445,7 @@ model ApprovalTransaction {
   entityId   String
 
   requestedById String?
+  leaveRequest  LeaveRequest?
 
   requestedBy Employee? @relation("TransactionRequester", fields: [requestedById], references: [id])
 
@@ -392,7 +455,7 @@ model ApprovalTransaction {
 
   workflow ApprovalWorkflow @relation(fields: [workflowId], references: [id])
 
-  approvalSteps ApprovalTransactionStep[]
+  approvalSteps  ApprovalTransactionStep[]
   workLogHeaders WorkLogHeader[]
 
   createdAt DateTime @default(now())
@@ -1010,4 +1073,844 @@ model WorkLogLine {
   @@index([sourceType])
   @@index([taskWorkSessionId])
   @@map("work_log_lines")
+}
+
+model Holiday {
+  id String @id @default(uuid())
+
+  companyId String
+  branchId  String?
+
+  holidayCode String?
+
+  holidayName String
+
+  description String?
+
+  holidayDate DateTime
+
+  holidayType String
+
+  isActive Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+  branch  Branch? @relation(fields: [branchId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, branchId, holidayDate, holidayName])
+  @@index([companyId])
+  @@index([branchId])
+  @@index([holidayDate])
+  @@map("holidays")
+}
+
+model LeaveType {
+  id String @id @default(uuid())
+
+  companyId String
+
+  leaveCode String
+  leaveName String
+
+  description String?
+
+  isPaid Boolean @default(true)
+
+  requiresApproval Boolean @default(true)
+
+  allowHalfDay Boolean @default(false)
+
+  isActive            Boolean @default(true)
+  carryForwardAllowed Boolean @default(false)
+
+  company          Company                @relation(fields: [companyId], references: [id])
+  leavePolicies    LeavePolicy[]
+  employeeBalances EmployeeLeaveBalance[]
+  leaveRequests    LeaveRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, leaveCode])
+  @@index([companyId])
+  @@map("leave_types")
+}
+
+model LeavePolicy {
+  id String @id @default(uuid())
+
+  companyId     String
+  branchId      String
+  departmentId  String?
+  designationId String?
+
+  leaveTypeId String
+
+  annualEntitlement Decimal @db.Decimal(5, 2)
+
+  carryForwardLimit Decimal? @db.Decimal(5, 2)
+
+  maxConsecutiveDays Int?
+
+  allowNegativeBalance Boolean @default(false)
+
+  maximumNegativeBalance Decimal? @db.Decimal(5, 2)
+
+  accrualMethod String @default("YEARLY")
+
+  accrualRate Decimal? @db.Decimal(5, 2)
+
+  accrualWorkingDays Int?
+
+  carryForwardExpiryMonths Int?
+
+  isActive Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  branch Branch @relation(fields: [branchId], references: [id])
+
+  department Department? @relation(fields: [departmentId], references: [id])
+
+  designation Designation? @relation(fields: [designationId], references: [id])
+
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, branchId, departmentId, designationId, leaveTypeId])
+  @@index([companyId])
+  @@index([branchId])
+  @@index([departmentId])
+  @@index([designationId])
+  @@index([leaveTypeId])
+  @@map("leave_policies")
+}
+
+model EmployeeLeaveBalance {
+  id String @id @default(uuid())
+
+  employeeId  String
+  leaveTypeId String
+
+  year Int
+
+  entitlement Decimal @db.Decimal(5, 2)
+
+  used Decimal @default(0) @db.Decimal(5, 2)
+
+  pending Decimal @default(0) @db.Decimal(5, 2)
+
+  balance Decimal @db.Decimal(5, 2)
+
+  isActive Boolean @default(true)
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  leaveType     LeaveType      @relation(fields: [leaveTypeId], references: [id])
+  leaveRequests LeaveRequest[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([employeeId])
+  @@index([leaveTypeId])
+  @@map("employee_leave_balances")
+}
+
+model LeaveRequest {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  leaveTypeId String
+
+  leaveBalanceId String?
+
+  fromDate DateTime
+  toDate   DateTime
+
+  requestedDays Decimal @db.Decimal(5, 2)
+
+  approvedDays Decimal? @db.Decimal(5, 2)
+
+  isHalfDay Boolean @default(false)
+
+  reason String?
+
+  attachmentUrl String?
+
+  status String @default("DRAFT")
+
+  cancellationReason String?
+
+  isActive Boolean @default(true)
+
+  approvalTransactionId String?
+
+  approvalTransaction ApprovalTransaction? @relation(fields: [approvalTransactionId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  leaveBalance EmployeeLeaveBalance? @relation(fields: [leaveBalanceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([approvalTransactionId])
+  @@index([employeeId])
+  @@index([leaveTypeId])
+  @@index([status])
+  @@map("leave_requests")
+}
+
+model Attendance {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  attendanceDate DateTime
+
+  checkInTime  DateTime?
+  checkOutTime DateTime?
+
+  shiftId String?
+
+  status String
+  // PRESENT
+  // ABSENT
+  // HALF_DAY
+  // LEAVE
+  // HOLIDAY
+  // WEEK_OFF
+
+  workedHours Decimal @default(0) @db.Decimal(5, 2)
+
+  lateMinutes Int @default(0)
+
+  earlyDepartureMinutes Int @default(0)
+
+  overtimeMinutes Int @default(0)
+
+  source String? @default("MANUAL")
+
+  approvalStatus String? @default("APPROVED")
+
+  remarks String?
+
+  isActive Boolean @default(true)
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  shift Shift? @relation(fields: [shiftId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([employeeId, attendanceDate])
+  @@index([employeeId])
+  @@index([attendanceDate])
+  @@index([status])
+  @@map("attendances")
+}
+
+model Shift {
+  id String @id @default(uuid())
+
+  shiftCode String @unique
+  shiftName String
+
+  startTime String
+  endTime   String
+
+  breakMinutes Int @default(60)
+
+  graceMinutes Int @default(15)
+
+  isNightShift Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employeeShifts EmployeeShift[]
+  attendances    Attendance[]
+
+  @@map("shifts")
+}
+
+model EmployeeShift {
+  id String @id @default(uuid())
+
+  employeeId String
+  shiftId    String
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  isActive Boolean @default(true)
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  shift Shift @relation(fields: [shiftId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([employeeId])
+  @@index([shiftId])
+  @@map("employee_shifts")
+}
+
+model AssetType {
+  id String @id @default(uuid())
+
+  companyId String
+
+  assetTypeCode String
+  assetTypeName String
+
+  isActive Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  assets Asset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("asset_types")
+}
+
+model Asset {
+  id String @id @default(uuid())
+
+  companyId String
+
+  assetCode String @unique
+
+  assetName String
+
+  assetTypeId String
+
+  serialNumber String?
+
+  manufacturer String?
+  modelNumber  String?
+
+  purchaseDate DateTime?
+
+  status String @default("AVAILABLE")
+  // AVAILABLE
+  // ASSIGNED
+  // REPAIR
+  // DISPOSED
+  // LOST
+
+  assetType AssetType @relation(fields: [assetTypeId], references: [id])
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employeeAssets EmployeeAsset[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([assetTypeId])
+  @@index([companyId])
+  @@index([status])
+  @@map("assets")
+}
+
+model EmployeeAsset {
+  id String @id @default(uuid())
+
+  employeeId String
+
+  assetId String
+
+  assignedDate DateTime
+
+  assignedById String?
+
+  returnedDate DateTime?
+
+  returnedById String?
+
+  status String @default("ASSIGNED")
+  // ASSIGNED
+  // RETURNED
+  // LOST
+  // DAMAGED
+
+  remarks String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  asset Asset @relation(fields: [assetId], references: [id])
+
+  assignedBy Employee? @relation("EmployeeAssetAssignedBy", fields: [assignedById], references: [id])
+
+  returnedBy Employee? @relation("EmployeeAssetReturnedBy", fields: [returnedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([assetId])
+  @@index([status])
+  @@map("employee_assets")
+}
+
+model EmployeeDocumentType {
+  id String @id @default(uuid())
+
+  companyId String
+
+  documentCode String
+  documentName String
+
+  isMandatory Boolean @default(false)
+
+  isActive Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  documents EmployeeDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([companyId])
+  @@map("employee_document_types")
+}
+
+model EmployeeDocument {
+  id String @id @default(uuid())
+
+  employeeId     String
+  documentTypeId String
+
+  documentNumber String?
+
+  issueDate  DateTime?
+  expiryDate DateTime?
+
+  filePath String?
+
+  status String @default("ACTIVE")
+
+  remarks String?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  documentType EmployeeDocumentType @relation(fields: [documentTypeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeId])
+  @@index([documentTypeId])
+  @@index([expiryDate])
+  @@map("employee_documents")
+}
+
+model EmployeeClearance {
+  id String @id @default(uuid())
+
+  separationId String @unique
+
+  status String @default("PENDING")
+  // PENDING
+  // IN_PROGRESS
+  // COMPLETED
+
+  completedDate DateTime?
+
+  separation EmployeeSeparation @relation(fields: [separationId], references: [id])
+
+  items EmployeeClearanceItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("employee_clearances")
+}
+
+model EmployeeClearanceItem {
+  id String @id @default(uuid())
+
+  clearanceId String
+
+  clearanceType String
+  // ASSET
+  // HR
+  // FINANCE
+  // IT
+  // ADMIN
+
+  itemName String
+
+  status String @default("PENDING")
+  // PENDING
+  // CLEARED
+
+  clearedById String?
+
+  clearedDate DateTime?
+
+  remarks String?
+
+  clearance EmployeeClearance @relation(fields: [clearanceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clearanceId])
+  @@map("employee_clearance_items")
+}
+
+model ResourceType {
+  id        String @id @default(uuid())
+  companyId String
+
+  name String
+  code String?
+
+  description String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id])
+  resources Resource[]
+
+  @@unique([companyId, name])
+}
+
+model Resource {
+  id String @id @default(uuid())
+
+  companyId      String
+  resourceTypeId String
+
+  name String
+  code String?
+
+  description String?
+
+  monthlyCost Decimal? @db.Decimal(12, 2)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  resourceType ResourceType @relation(fields: [resourceTypeId], references: [id])
+
+  employeeResources EmployeeResource[]
+
+  @@unique([companyId, name])
+}
+
+model EmployeeResource {
+  id String @id @default(uuid())
+
+  companyId String
+
+  employeeId String
+  resourceId String
+
+  assignedDate DateTime
+
+  revokedDate DateTime?
+
+  remarks String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  resource Resource @relation(fields: [resourceId], references: [id])
+
+  @@index([employeeId])
+  @@index([resourceId])
+}
+
+model OnboardingTemplate {
+  id        String @id @default(uuid())
+  companyId String
+
+  templateCode String?
+  templateName String
+
+  description String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  tasks       OnboardingTemplateTask[]
+  onboardings EmployeeOnboarding[]
+}
+
+model OnboardingTemplateTask {
+  id String @id @default(uuid())
+
+  onboardingTemplateId String
+
+  taskName    String
+  description String?
+
+  sequenceNo Int
+
+  isMandatory Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  onboardingTemplate OnboardingTemplate @relation(fields: [onboardingTemplateId], references: [id])
+
+  @@unique([onboardingTemplateId, taskName])
+  @@unique([onboardingTemplateId, sequenceNo])
+}
+
+model EmployeeOnboarding {
+  id String @id @default(uuid())
+
+  companyId  String
+  employeeId String
+  templateId String
+
+  status String @default("IN_PROGRESS")
+
+  startDate     DateTime
+  completedDate DateTime?
+
+  remarks String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  template OnboardingTemplate @relation(fields: [templateId], references: [id])
+
+  tasks EmployeeOnboardingTask[]
+
+  @@index([employeeId])
+  @@index([templateId])
+  @@index([status])
+}
+
+model EmployeeOnboardingTask {
+  id String @id @default(uuid())
+
+  onboardingId String
+
+  taskName    String
+  description String?
+
+  sequenceNo Int
+
+  isMandatory Boolean
+
+  status String @default("PENDING")
+
+  completedDate DateTime?
+
+  remarks String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  onboarding EmployeeOnboarding @relation(fields: [onboardingId], references: [id])
+}
+
+model SalaryComponent {
+  id String @id @default(uuid())
+
+  companyId String
+
+  componentCode String
+  componentName String
+
+  componentType String
+
+  description String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  salaryLines EmployeeSalaryLine[]
+
+  @@index([companyId, componentCode])
+}
+
+model EmployeeSalary {
+  id String @id @default(uuid())
+
+  companyId  String
+  employeeId String
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  isActive Boolean @default(true)
+
+  remarks String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  lines EmployeeSalaryLine[]
+}
+
+model EmployeeSalaryLine {
+  id String @id @default(uuid())
+
+  employeeSalaryId String
+
+  salaryComponentId String
+
+  amount Decimal @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employeeSalary EmployeeSalary @relation(fields: [employeeSalaryId], references: [id])
+
+  salaryComponent SalaryComponent @relation(fields: [salaryComponentId], references: [id])
+}
+
+model EmployeeTaxProfile {
+  id String @id @default(uuid())
+
+  companyId  String
+  employeeId String
+
+  countryCode String
+
+  taxRegime String?
+
+  monthlyTaxAmount Decimal @default(0) @db.Decimal(18, 2)
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([employeeId])
+}
+
+model EmployeeDeduction {
+  id String @id @default(uuid())
+
+  companyId  String
+  employeeId String
+
+  deductionCode String?
+  deductionName String
+
+  monthlyAmount Decimal @db.Decimal(18, 2)
+
+  startMonth DateTime
+
+  endMonth DateTime?
+
+  remarks String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+}
+
+model PayrollRun {
+  id String @id @default(uuid())
+
+  companyId String
+
+  payrollYear  Int
+  payrollMonth Int
+
+  status String @default("DRAFT")
+
+  processedDate DateTime?
+
+  remarks String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  employees PayrollRunEmployee[]
+
+  @@unique([companyId, payrollYear, payrollMonth])
+}
+
+model PayrollRunEmployee {
+  id String @id @default(uuid())
+
+  payrollRunId String
+
+  employeeId String
+  remarks    String?
+
+  payrollYear  Int
+  payrollMonth Int
+
+  grossSalary Decimal @db.Decimal(18, 2)
+
+  taxAmount Decimal @default(0) @db.Decimal(18, 2)
+
+  deductionAmount Decimal @default(0) @db.Decimal(18, 2)
+
+  netSalary Decimal @db.Decimal(18, 2)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payrollRun PayrollRun @relation(fields: [payrollRunId], references: [id])
+
+  employee Employee @relation(fields: [employeeId], references: [id])
 }
