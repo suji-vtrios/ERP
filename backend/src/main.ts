@@ -9,17 +9,15 @@ import { HttpExceptionFilter }
 
 
 async function bootstrap() {
-  const app =
-    await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule);
 
-  app.useGlobalInterceptors(
-    new ResponseInterceptor(),
-  );
+  app.enableCors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  });
 
-  app.useGlobalFilters(
-    new HttpExceptionFilter(),
-  );
-
+  app.useGlobalInterceptors(new ResponseInterceptor());
+  app.useGlobalFilters(new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -27,26 +25,9 @@ async function bootstrap() {
     }),
   );
 
-  const config = new DocumentBuilder()
-  .setTitle('Group ERP API')
-  .setDescription('ERP Backend APIs')
-  .setVersion('1.0')
-  .build();
+  // Swagger...
 
-const document = SwaggerModule.createDocument(
-  app,
-  config,
-);
-
-SwaggerModule.setup(
-  'api',
-  app,
-  document,
-);
-
-  await app.listen(
-    process.env.PORT ?? 3000,
-  );
+  await app.listen(process.env.PORT ?? 3001);
 }
 
 bootstrap();
