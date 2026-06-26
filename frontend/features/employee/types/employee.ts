@@ -17,22 +17,26 @@ export interface Employee {
 
   company?: {
     id: string;
-    name: string;
+    companyCode: string;
+    companyName: string;
   };
 
   branch?: {
     id: string;
-    name: string;
+    branchCode: string;
+    branchName: string;
   };
 
   department?: {
     id: string;
-    name: string;
+    departmentCode: string;
+    departmentName: string;
   };
 
   designation?: {
     id: string;
-    name: string;
+    designationCode: string;
+    designationName: string;
   };
 
   manager?: {
