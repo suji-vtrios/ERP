@@ -138,13 +138,25 @@ export function EmployeeForm() {
                     control={form.control}
                     name="companyId"
                     render={({ field }) => (
-                        <LookupSelect
-                        placeholder="Select Company"
-                        items={companies}
-                        loading={companiesLoading}
+                        <Select
                         value={field.value}
                         onValueChange={field.onChange}
-                        />
+                        >
+                        <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Select Company" />
+                        </SelectTrigger>
+
+                        <SelectContent>
+                            {companies.map((company) => (
+                            <SelectItem
+                                key={company.id}
+                                value={company.id}
+                            >
+                                {company.code} - {company.name}
+                            </SelectItem>
+                            ))}
+                        </SelectContent>
+                        </Select>
                     )}
                 />
 

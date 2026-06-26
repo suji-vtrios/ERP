@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 
 import {
@@ -41,10 +42,12 @@ export class BranchController {
 
   @Get()
   @ApiOperation({
-    summary: 'Get All Branches',
+    summary: "Get All Branches",
   })
-  findAll() {
-    return this.branchService.findAll();
+  findAll(
+    @Query("companyId") companyId?: string,
+  ) {
+    return this.branchService.findAll(companyId);
   }
 
   @Get(':id')

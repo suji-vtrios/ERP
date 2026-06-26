@@ -55,13 +55,14 @@ export class BranchService {
     return branch;
   }
 
-  async findAll() {
+  async findAll(companyId?: string) {
     return this.prisma.branch.findMany({
-      include: {
-        company: true,
-      },
+      where: companyId
+        ? { companyId }
+        : undefined,
+
       orderBy: {
-        branchName: 'asc',
+        branchName: "asc",
       },
     });
   }

@@ -62,12 +62,19 @@ export class DepartmentService {
     return department;
   }
 
-  async findAll() {
+  async findAll(branchId?: string) {
     return this.prisma.department.findMany({
+      where: branchId
+        ? {
+            branchId,
+          }
+        : undefined,
+
       include: {
         company: true,
         branch: true,
       },
+
       orderBy: {
         departmentName: 'asc',
       },

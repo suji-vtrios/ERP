@@ -6,6 +6,7 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 
 import {
@@ -40,8 +41,12 @@ export class DepartmentController {
   @ApiOperation({
     summary: 'Get All Departments',
   })
-  findAll() {
-    return this.departmentService.findAll();
+  findAll(
+    @Query('branchId') branchId?: string,
+  ) {
+    return this.departmentService.findAll(
+      branchId,
+    );
   }
 
   @Get(':id')
