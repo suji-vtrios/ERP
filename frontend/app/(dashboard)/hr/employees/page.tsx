@@ -1,8 +1,7 @@
 import { PageContainer } from "@/components/common/page-container";
 import { PageHeader } from "@/components/common/page-header";
 
-import { EmployeeTable } from "@/features/employee/components/employee-table";
-import { EmployeeToolbar } from "@/features/employee/components/employee-toolbar";
+import { EmployeeForm } from "@/features/employee/forms/employee-form";
 
 export default function EmployeesPage() {
   return (
@@ -12,8 +11,9 @@ export default function EmployeesPage() {
         description="Manage company employees"
       />
 
-      <EmployeeToolbar />
-      <EmployeeTable />
+      <div className="mt-6 max-w-5xl rounded-lg border p-6">
+        <EmployeeForm />
+      </div>
     </PageContainer>
   );
 }

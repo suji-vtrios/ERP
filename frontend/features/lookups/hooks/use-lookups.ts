@@ -7,7 +7,10 @@ export function useCompanies() {
     queryKey: ["companies"],
     queryFn: LookupService.getCompanies,
   });
+  
 }
+
+
 
 export function useBranches(
   companyId?: string,

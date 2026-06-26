@@ -12,7 +12,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { EmployeeForm } from "../forms/employee-form";
+import { EmployeeForm } from "../forms/employee-form-old";
 
 export function EmployeeDialog() {
   const [open, setOpen] = useState(false);
