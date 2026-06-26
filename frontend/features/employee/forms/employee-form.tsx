@@ -15,8 +15,39 @@ import {
   FormSection,
   RequiredLabel,
 } from "@/components/forms";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+import {
+  createEmployeeSchema,
+  type CreateEmployeeForm,
+} from "../schemas/create-employee.schema";
 
 export function EmployeeForm() {
+    const form = useForm<CreateEmployeeForm>({
+            resolver: zodResolver(createEmployeeSchema),
+
+            defaultValues: {
+            employeeCode: "",
+            firstName: "",
+            lastName: "",
+            email: "",
+            mobile: "",
+            companyId: "",
+            branchId: "",
+            departmentId: "",
+            designationId: "",
+            managerId: "",
+            joiningDate: "",
+            employeeType: "",
+            },
+        });
+
+        const onSubmit = (data: CreateEmployeeForm) => {
+            console.log(data);
+        };
+   
+           
   return (
     <div className="space-y-8">
       {/* Personal Information */}
