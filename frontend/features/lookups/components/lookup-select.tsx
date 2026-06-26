@@ -34,7 +34,14 @@ export function LookupSelect({
       <SelectContent>
         {items.map((item) => (
           <SelectItem key={item.id} value={item.id}>
-            {item.code} - {item.name}
+            <option
+                key={item.id}
+                value={item.id}
+            >
+                {item.code
+                    ? `${item.code} - ${item.name}`
+                    : item.name}
+            </option>
           </SelectItem>
         ))}
       </SelectContent>

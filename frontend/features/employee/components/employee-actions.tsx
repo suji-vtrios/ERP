@@ -25,10 +25,12 @@ import type { Employee } from "../types/employee";
 
 interface EmployeeActionsProps {
   employee: Employee;
+  onEdit?: (employee: Employee) => void;
 }
 
 export function EmployeeActions({
   employee,
+  onEdit,
 }: EmployeeActionsProps) {
   return (
     <DropdownMenu>
@@ -50,7 +52,7 @@ export function EmployeeActions({
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => console.log("Edit", employee.id)}
+          onClick={() => onEdit?.(employee)}
         >
           <Pencil className="mr-2 h-4 w-4" />
           Edit Employee

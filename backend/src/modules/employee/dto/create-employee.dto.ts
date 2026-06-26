@@ -11,10 +11,7 @@ import {
 } from '@nestjs/swagger';
 
 export class CreateEmployeeDto {
-  @ApiProperty()
-  @IsString()
-  employeeCode: string;
-
+  
   @ApiProperty()
   @IsUUID()
   companyId: string;

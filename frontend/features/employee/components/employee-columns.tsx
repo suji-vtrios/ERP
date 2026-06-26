@@ -9,7 +9,9 @@ import { Button } from "@/components/ui/button";
 import { EmployeeActions } from "./employee-actions";
 import { EmployeeAvatar } from "./employee-avatar";
 
-export const employeeColumns: ColumnDef<Employee>[] = [
+export const employeeColumns = (
+  onEdit?: (employee: Employee) => void,
+): ColumnDef<Employee>[] => [
   {
     accessorKey: "employeeCode",
     header: ({ column }) => (
@@ -120,14 +122,17 @@ export const employeeColumns: ColumnDef<Employee>[] = [
       />
     ),
   },
+  
   {
-    id: "actions",
-    enableSorting: false,
-    enableHiding: false,
-    cell: ({ row }) => (
-      <EmployeeActions
-        employee={row.original}
-      />
-    ),
-  },
+      id: "actions",
+      enableSorting: false,
+      enableHiding: false,
+      cell: ({ row }) => (
+        <EmployeeActions
+          employee={row.original}
+          onEdit={onEdit}
+        />
+      ),
+    },
+  
 ];

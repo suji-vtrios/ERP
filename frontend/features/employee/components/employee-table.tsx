@@ -5,7 +5,15 @@ import { DataTable } from "@/components/tables/data-table";
 import { useEmployees } from "../hooks/use-employees";
 import { employeeColumns } from "./employee-columns";
 
-export function EmployeeTable() {
+import type { Employee } from "../types/employee";
+
+interface EmployeeTableProps {
+  onEdit?: (employee: Employee) => void;
+}
+
+export function EmployeeTable({
+  onEdit,
+}: EmployeeTableProps) {
   const {
     data = [],
     isLoading,
@@ -20,15 +28,15 @@ export function EmployeeTable() {
     console.error(error);
 
     return (
-        <pre className="text-red-500">
+      <pre className="text-red-500">
         {JSON.stringify(error, null, 2)}
-        </pre>
+      </pre>
     );
-    }
+  }
 
   return (
     <DataTable
-      columns={employeeColumns}
+      columns={employeeColumns(onEdit)}
       data={data}
     />
   );

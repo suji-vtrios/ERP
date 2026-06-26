@@ -43,6 +43,14 @@ export class EmployeeController {
     return this.employeeService.findAll();
   }
 
+  @Get('summary')
+  @ApiOperation({
+    summary: 'Employee Dashboard Summary',
+  })
+  summary() {
+    return this.employeeService.summary();
+  }
+
   @Get(':id')
   @ApiOperation({
     summary: 'Get Employee By Id',

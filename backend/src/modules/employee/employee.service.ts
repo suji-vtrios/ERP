@@ -15,6 +15,30 @@ export class EmployeeService {
     private prisma: PrismaService,
     private auditService: AuditService,
   ) {}
+  private async generateEmployeeCode(): Promise<string> {
+    const lastEmployee = await this.prisma.employee.findFirst({
+      orderBy: {
+        employeeCode: "desc",
+      },
+      select: {
+        employeeCode: true,
+      },
+    });
+
+    if (!lastEmployee) {
+      return "EMP-000001";
+    }
+
+    const match = lastEmployee.employeeCode.match(/\d+$/);
+
+    const nextNumber = match
+      ? Number(match[0]) + 1
+      : 1;
+
+    return `EMP-${nextNumber
+      .toString()
+      .padStart(6, "0")}`;
+  }
 
   async create(dto: CreateEmployeeDto) {
 
@@ -57,9 +81,15 @@ export class EmployeeService {
       );
     }
 
+    const employeeCode =
+      await this.generateEmployeeCode();
+
     const employee =
       await this.prisma.employee.create({
-        data: dto,
+        data: {
+          ...dto,
+          employeeCode,
+        },
       });
 
     await this.auditService.log(
@@ -94,6 +124,62 @@ export class EmployeeService {
         firstName: 'asc',
       },
     });
+  }
+
+  async summary() {
+    const [
+      active,
+      probation,
+      notice,
+      terminated,
+    ] = await Promise.all([
+      this.prisma.employee.count({
+        where: {
+          employmentStatus: 'ACTIVE',
+        },
+      }),
+
+      this.prisma.employee.count({
+        where: {
+          employmentStatus: 'PROBATION',
+        },
+      }),
+
+      this.prisma.employee.count({
+        where: {
+          employmentStatus: 'NOTICE',
+        },
+      }),
+
+      this.prisma.employee.count({
+        where: {
+          employmentStatus: 'TERMINATED',
+        },
+      }),
+    ]);
+
+    return [
+      {
+        key: 'active',
+        label: 'Active Employees',
+        value: active,
+      },
+      {
+        key: 'probation',
+        label: 'On Probation',
+        value: probation,
+      },
+      {
+        key: 'notice',
+        label: 'Notice Period',
+        value: notice,
+      },
+      {
+        key: 'terminated',
+        label: 'Terminated',
+        value: terminated,
+      },
+    ];
   }
 
   async findOne(id: string) {

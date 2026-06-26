@@ -1,12 +1,21 @@
 "use client";
 
+import { Plus } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { EmployeeDialog } from "../dialogs/employee-dialog";
 
-export function EmployeeToolbar() {
+import { PageToolbar } from "@/components/common/page-toolbar";
+
+interface EmployeeToolbarProps {
+  onAdd: () => void;
+}
+
+export function EmployeeToolbar({
+  onAdd,
+}: EmployeeToolbarProps) {
   return (
-    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <PageToolbar>
       <Input
         placeholder="Search employees..."
         className="max-w-sm"
@@ -17,8 +26,11 @@ export function EmployeeToolbar() {
           Refresh
         </Button>
 
-        <EmployeeDialog />
+        <Button onClick={onAdd}>
+          <Plus className="mr-2 h-4 w-4" />
+          Add Employee
+        </Button>
       </div>
-    </div>
+    </PageToolbar>
   );
 }

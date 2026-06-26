@@ -1,6 +1,5 @@
 export interface CreateEmployee {
-  employeeCode: string;
-
+ 
   companyId: string;
 
   branchId: string;
@@ -17,7 +16,7 @@ export interface CreateEmployee {
 
   designationId?: string;
 
-  joiningDate?: Date;
+  joiningDate?: string;
 
   employeeType?: string;
 
