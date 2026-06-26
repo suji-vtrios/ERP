@@ -23,9 +23,19 @@ export const LookupService = {
     }));
   },
 
-  async getBranches(): Promise<LookupItem[]> {
+  async getBranches(
+    companyId?: string,
+  ): Promise<LookupItem[]> {
+
     const response =
-      await apiClient.get<ApiResponse<BranchLookup[]>>("/branches");
+      await apiClient.get<ApiResponse<BranchLookup[]>>(
+        "/branches",
+        {
+          params: companyId
+            ? { companyId }
+            : undefined,
+        },
+      );
 
     return response.data.data.map((branch) => ({
       id: branch.id,
@@ -34,9 +44,19 @@ export const LookupService = {
     }));
   },
 
-  async getDepartments(): Promise<LookupItem[]> {
+  async getDepartments(
+    branchId?: string,
+  ): Promise<LookupItem[]> {
+
     const response =
-      await apiClient.get<ApiResponse<DepartmentLookup[]>>("/departments");
+      await apiClient.get<ApiResponse<DepartmentLookup[]>>(
+        "/departments",
+        {
+          params: branchId
+            ? { branchId }
+            : undefined,
+        },
+      );
 
     return response.data.data.map((department) => ({
       id: department.id,

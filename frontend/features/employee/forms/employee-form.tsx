@@ -22,6 +22,14 @@ import {
   createEmployeeSchema,
   type CreateEmployeeForm,
 } from "../schemas/create-employee.schema";
+import {
+  useCompanies,
+  useBranches,
+  useDepartments,
+} from "@/features/lookups/hooks/use-lookups";
+import { Controller } from "react-hook-form";
+
+import { LookupSelect } from "@/features/lookups/components/lookup-select";
 
 export function EmployeeForm() {
     const form = useForm<CreateEmployeeForm>({
@@ -42,45 +50,80 @@ export function EmployeeForm() {
             employeeType: "",
             },
         });
+    const {
+        data: companies = [],
+        isLoading: companiesLoading,
+    } = useCompanies();
 
-        const onSubmit = (data: CreateEmployeeForm) => {
-            console.log(data);
-        };
-   
+    const companyId = form.watch("companyId");
+
+    console.log("Watch companyId:", companyId);
+
+    const {
+        data: branches = [],
+        isLoading: branchesLoading,
+    } = useBranches(companyId);
+
+    const branchId = form.watch("branchId");
+
+    const {
+        data: departments = [],
+        isLoading: departmentsLoading,
+    } = useDepartments(branchId);
+
+    const onSubmit = (data: CreateEmployeeForm) => {
+  
+    };
+
+
            
   return (
-    <div className="space-y-8">
+    <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-8"
+    >
       {/* Personal Information */}
       <FormSection title="Personal Information">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <RequiredLabel required>  Employee Code</RequiredLabel>
-            <Input placeholder="Enter Employee Code" />
+            <Input
+                placeholder="Enter Employee Code"
+                {...form.register("employeeCode")}
+            />
           </div>
 
           <div className="space-y-2">
             <RequiredLabel required>First Name</RequiredLabel>
-            <Input placeholder="Enter First Name" />
+            <Input
+                placeholder="Enter First Name"
+                {...form.register("firstName")}
+            />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Last Name</label>
-            <Input placeholder="Enter Last Name" />
+            <Input
+                placeholder="Enter Last Name"
+                {...form.register("lastName")}
+            />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Email</label>
             <Input
-              type="email"
-              placeholder="Enter Email Address"
+                type="email"
+                placeholder="Enter Email Address"
+                {...form.register("email")}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium">Mobile</label>
             <Input
-              type="tel"
-              placeholder="Enter Mobile Number"
+                type="tel"
+                placeholder="Enter Mobile Number"
+                {...form.register("mobile")}
             />
           </div>
         </div>
@@ -90,45 +133,55 @@ export function EmployeeForm() {
       <FormSection title="Organization">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <RequiredLabel>Company</RequiredLabel>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Company" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="placeholder">
-                  Loading...
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <RequiredLabel required>Company</RequiredLabel>
+                <Controller
+                    control={form.control}
+                    name="companyId"
+                    render={({ field }) => (
+                        <LookupSelect
+                        placeholder="Select Company"
+                        items={companies}
+                        loading={companiesLoading}
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        />
+                    )}
+                />
+
           </div>
 
           <div className="space-y-2">
-            <RequiredLabel>Branch</RequiredLabel>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Branch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="placeholder">
-                  Loading...
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <RequiredLabel required>Branch</RequiredLabel>
+            <Controller
+                control={form.control}
+                name="branchId"
+                render={({ field }) => (
+                    <LookupSelect
+                    placeholder="Select Branch"
+                    items={branches}
+                    loading={branchesLoading}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    />
+                )}
+            />
           </div>
 
           <div className="space-y-2">
-            <RequiredLabel>Department</RequiredLabel>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Department" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="placeholder">
-                  Loading...
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <RequiredLabel required>Department</RequiredLabel>
+            <Controller
+                control={form.control}
+                name="departmentId"
+                render={({ field }) => (
+                    <LookupSelect
+                    placeholder="Select Department"
+                    items={departments}
+                    loading={departmentsLoading}
+                    value={field.value}
+                    onValueChange={field.onChange}
+                    />
+                )}
+            />
           </div>
 
           <div className="space-y-2">
@@ -136,7 +189,7 @@ export function EmployeeForm() {
               Designation
             </label>
             <Select>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Designation" />
               </SelectTrigger>
               <SelectContent>
@@ -152,7 +205,7 @@ export function EmployeeForm() {
               Reporting Manager
             </label>
             <Select>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Reporting Manager" />
               </SelectTrigger>
               <SelectContent>
@@ -172,7 +225,10 @@ export function EmployeeForm() {
             <label className="text-sm font-medium">
               Joining Date
             </label>
-            <Input type="date" />
+            <Input
+                type="date"
+                {...form.register("joiningDate")}
+            />
           </div>
 
           <div className="space-y-2">
@@ -180,7 +236,7 @@ export function EmployeeForm() {
               Employee Type
             </label>
             <Select>
-              <SelectTrigger>
+              <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select Employee Type" />
               </SelectTrigger>
               <SelectContent>
@@ -200,15 +256,15 @@ export function EmployeeForm() {
       </FormSection>
 
       {/* Footer */}
-      <div className="flex justify-end gap-3 border-t pt-6">
+      <div className="flex justify-end gap-3 border-t pt-6 mt-8">
         <Button variant="outline">
           Cancel
         </Button>
 
-        <Button>
-          Create Employee
+        <Button type="submit">
+            Create Employee
         </Button>
       </div>
-    </div>
+    </form>
   );
 }

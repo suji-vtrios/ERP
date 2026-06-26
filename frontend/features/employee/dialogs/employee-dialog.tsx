@@ -12,6 +12,7 @@ import {
   DialogDescription,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { EmployeeForm } from "../forms/employee-form";
 
 export function EmployeeDialog() {
   const [open, setOpen] = useState(false);
@@ -22,7 +23,9 @@ export function EmployeeDialog() {
         <Button>Add Employee</Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent  className="sm:max-w-5xl max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Add Employee</DialogTitle>
 
@@ -32,7 +35,7 @@ export function EmployeeDialog() {
         </DialogHeader>
 
         <div className="py-8 text-center text-muted-foreground">
-          Employee Form Coming Next
+          <EmployeeForm />
         </div>
       </DialogContent>
     </Dialog>
