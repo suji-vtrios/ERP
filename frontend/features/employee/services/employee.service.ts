@@ -30,6 +30,15 @@ export const EmployeeService = {
     return response.data.data;
   },
 
+  async getById(id: string): Promise<Employee> {
+    const response =
+      await apiClient.get<ApiResponse<Employee>>(
+        `/employees/${id}`,
+      );
+
+    return response.data.data;
+  },
+
   async create(data: CreateEmployee) {
     const payload = normalizeEmployeePayload(data);
 

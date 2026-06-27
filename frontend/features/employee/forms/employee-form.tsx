@@ -112,20 +112,11 @@ export function EmployeeForm({
 
     
     const onSubmit = (data: EmployeeFormData) => {
-        const payload = Object.fromEntries(
-            Object.entries(data).filter(
-                ([, value]) =>
-                value !== "" &&
-                value !== null &&
-                value !== undefined,
-            ),
-        );
-
         if (isEdit && employee) {
             updateEmployee.mutate(
             {
                 id: employee.id,
-                data: payload,
+                data,
             },
             {
                 onSuccess: () => {
@@ -138,7 +129,7 @@ export function EmployeeForm({
             return;
         }
 
-        createEmployee.mutate(payload, {
+        createEmployee.mutate(data, {
             onSuccess: () => {
             form.reset();
             onSuccess?.();

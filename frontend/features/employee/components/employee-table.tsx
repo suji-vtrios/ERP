@@ -6,6 +6,7 @@ import { useEmployees } from "../hooks/use-employees";
 import { employeeColumns } from "./employee-columns";
 
 import type { Employee } from "../types/employee";
+import { useRouter } from "next/navigation";
 
 interface EmployeeTableProps {
   onEdit?: (employee: Employee) => void;
@@ -14,8 +15,10 @@ interface EmployeeTableProps {
 export function EmployeeTable({
   onEdit,
 }: EmployeeTableProps) {
+  const router = useRouter();
+
   const {
-    data = [],
+    data: employees = [],
     isLoading,
     error,
   } = useEmployees();
@@ -36,8 +39,11 @@ export function EmployeeTable({
 
   return (
     <DataTable
-      columns={employeeColumns(onEdit)}
-      data={data}
+        columns={employeeColumns(onEdit)}
+        data={employees}
+        onRowClick={(employee: Employee) =>
+            router.push(`/hr/employees/${employee.id}`)
+          }
     />
   );
 }

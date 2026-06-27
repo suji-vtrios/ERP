@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import type { Employee } from "../types/employee";
+import { useRouter } from "next/navigation";
 
 interface EmployeeActionsProps {
   employee: Employee;
@@ -32,7 +33,13 @@ export function EmployeeActions({
   employee,
   onEdit,
 }: EmployeeActionsProps) {
+
+  const router = useRouter();
+
   return (
+    <div
+    onClick={(e) => e.stopPropagation()}
+  >
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
@@ -45,7 +52,9 @@ export function EmployeeActions({
 
       <DropdownMenuContent align="end">
         <DropdownMenuItem
-          onClick={() => console.log("View", employee.id)}
+          onClick={() =>
+            router.push(`/hr/employees/${employee.id}`)
+          }
         >
           <Eye className="mr-2 h-4 w-4" />
           View Profile
@@ -88,5 +97,6 @@ export function EmployeeActions({
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </div>
   );
 }

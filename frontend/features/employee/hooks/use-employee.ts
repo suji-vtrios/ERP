@@ -4,9 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import { EmployeeService } from "../services/employee.service";
 
-export function useEmployees() {
+export function useEmployee(id: string) {
   return useQuery({
-    queryKey: ["employees"],
-    queryFn: () => EmployeeService.getAll(),
+    queryKey: ["employee", id],
+    queryFn: () => EmployeeService.getById(id),
+    enabled: !!id,
   });
 }
