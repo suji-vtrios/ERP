@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 import { CreateEmployeeAssetDto } from './dto/create-employee-asset.dto';
 import { ReturnAssetDto } from './dto/return-asset.dto';
@@ -14,6 +15,7 @@ import { ReturnAssetDto } from './dto/return-asset.dto';
 export class EmployeeAssetService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
   ) {}
   async create(
     dto: CreateEmployeeAssetDto,
@@ -54,7 +56,7 @@ export class EmployeeAssetService {
       await this.prisma.employeeAsset.findFirst({
         where: {
           assetId: dto.assetId,
-          status: 'ASSIGNED',
+          returnedDate: null,
         },
       });
 
@@ -83,16 +85,41 @@ export class EmployeeAssetService {
       },
       data: {
         status: 'ASSIGNED',
+        location: 'Assigned to Employee',
       },
     });
+
+    await this.auditService.log(
+      'Employee Asset',
+      assignment.id,
+      'CREATE',
+      null,
+      assignment,
+    );
 
     return assignment;
   }
   async findAll() {
     return this.prisma.employeeAsset.findMany({
       include: {
-        employee: true,
-        asset: true,
+          employee: {
+              include: {
+                  company: true,
+                  branch: true,
+                  department: true,
+                  designation: true,
+              },
+          },
+
+          asset: {
+              include: {
+                  assetType: {
+                      include: {
+                          assetCategory: true,
+                      },
+                  },
+              },
+          },
       },
       orderBy: {
         assignedDate: 'desc',
@@ -121,9 +148,25 @@ export class EmployeeAssetService {
       await this.prisma.employeeAsset.findUnique({
         where: { id },
         include: {
-          employee: true,
-          asset: true,
-        },
+          employee: {
+              include: {
+                  company: true,
+                  branch: true,
+                  department: true,
+                  designation: true,
+              },
+          },
+
+          asset: {
+              include: {
+                  assetType: {
+                      include: {
+                          assetCategory: true,
+                      },
+                  },
+              },
+          },
+      }
       });
 
     if (!assignment) {
@@ -133,6 +176,41 @@ export class EmployeeAssetService {
     }
 
     return assignment;
+  }
+
+  async findByAsset(
+    assetId: string,
+  ) {
+    return this.prisma.employeeAsset.findMany({
+      where: {
+        assetId,
+      },
+
+      include: {
+        employee: {
+          include: {
+            company: true,
+            branch: true,
+            department: true,
+            designation: true,
+          },
+        },
+
+        asset: {
+          include: {
+            assetType: {
+              include: {
+                assetCategory: true,
+              },
+            },
+          },
+        },
+      },
+
+      orderBy: {
+        assignedDate: 'desc',
+      },
+    });
   }
 
   async returnAsset(
@@ -156,9 +234,7 @@ export class EmployeeAssetService {
           id,
         },
         data: {
-          returnedDate: new Date(
-            dto.returnedDate,
-          ),
+          returnedDate: new Date(dto.returnedDate),
           remarks: dto.remarks,
           status: 'RETURNED',
         },
@@ -170,8 +246,17 @@ export class EmployeeAssetService {
       },
       data: {
         status: 'AVAILABLE',
+        location: 'IT Store',
       },
     });
+
+    await this.auditService.log(
+      'Employee Asset',
+      id,
+      'RETURN',
+      assignment,
+      result,
+    );
 
     return result;
   }

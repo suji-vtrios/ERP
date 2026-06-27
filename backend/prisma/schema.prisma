@@ -62,8 +62,9 @@ model Company {
   resources           Resource[]
   employeeResources   EmployeeResource[]
 
-  assetTypes AssetType[]
-  assets     Asset[]
+  assetCategories AssetCategory[]
+  assetTypes      AssetType[]
+  assets          Asset[]
 
   onboardingTemplates OnboardingTemplate[]
   employeeOnboardings EmployeeOnboarding[]
@@ -97,6 +98,7 @@ model Branch {
   projects      Project[]
   holidays      Holiday[]
   leavePolicies LeavePolicy[]
+  assets        Asset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1369,24 +1371,58 @@ model EmployeeShift {
   @@map("employee_shifts")
 }
 
+model AssetCategory {
+  id String @id @default(uuid())
+
+  companyId String
+
+  assetCategoryCode String
+  assetCategoryName String
+
+  description String?
+
+  isActive Boolean @default(true)
+
+  company Company @relation(fields: [companyId], references: [id])
+
+  assetTypes AssetType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([companyId, assetCategoryCode])
+  @@unique([companyId, assetCategoryName])
+  @@index([companyId])
+  @@map("asset_categories")
+}
+
 model AssetType {
   id String @id @default(uuid())
 
   companyId String
 
+  assetCategoryId String
+
   assetTypeCode String
   assetTypeName String
+
+  description String?
 
   isActive Boolean @default(true)
 
   company Company @relation(fields: [companyId], references: [id])
+
+  assetCategory AssetCategory @relation(fields: [assetCategoryId], references: [id])
 
   assets Asset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([companyId, assetTypeCode])
+  @@unique([companyId, assetTypeName])
   @@index([companyId])
+  @@index([assetCategoryId])
   @@map("asset_types")
 }
 
@@ -1395,7 +1431,9 @@ model Asset {
 
   companyId String
 
-  assetCode String @unique
+  branchId String?
+
+  assetCode String
 
   assetName String
 
@@ -1408,6 +1446,16 @@ model Asset {
 
   purchaseDate DateTime?
 
+  purchaseCost Decimal?
+
+  currency String?
+
+  warrantyExpiry DateTime?
+
+  location String?
+
+  remarks String?
+
   status String @default("AVAILABLE")
   // AVAILABLE
   // ASSIGNED
@@ -1415,17 +1463,23 @@ model Asset {
   // DISPOSED
   // LOST
 
-  assetType AssetType @relation(fields: [assetTypeId], references: [id])
+  isActive Boolean @default(true)
 
   company Company @relation(fields: [companyId], references: [id])
+
+  branch Branch? @relation(fields: [branchId], references: [id])
+
+  assetType AssetType @relation(fields: [assetTypeId], references: [id])
 
   employeeAssets EmployeeAsset[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([assetTypeId])
+  @@unique([companyId, assetCode])
   @@index([companyId])
+  @@index([branchId])
+  @@index([assetTypeId])
   @@index([status])
   @@map("assets")
 }

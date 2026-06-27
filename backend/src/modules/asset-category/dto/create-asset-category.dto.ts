@@ -5,18 +5,15 @@ import {
   IsUUID,
 } from 'class-validator';
 
-export class CreateAssetTypeDto {
+export class CreateAssetCategoryDto {
   @IsUUID()
   companyId: string;
 
-  @IsUUID()
-  assetCategoryId: string;
+  @IsString()
+  assetCategoryCode: string;
 
   @IsString()
-  assetTypeCode: string;
-
-  @IsString()
-  assetTypeName: string;
+  assetCategoryName: string;
 
   @IsOptional()
   @IsString()

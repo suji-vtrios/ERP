@@ -1,10 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AssetTypeService } from './asset-type.service';
-import { AssetTypeController } from './asset-type.controller';
+
 import { PrismaModule } from '../../prisma/prisma.module';
+import { AuditModule } from '../audit/audit.module';
+
+import { AssetTypeController } from './asset-type.controller';
+import { AssetTypeService } from './asset-type.service';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [
+    PrismaModule,
+    AuditModule,
+  ],
   controllers: [AssetTypeController],
   providers: [AssetTypeService],
 })

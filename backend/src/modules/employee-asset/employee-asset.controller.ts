@@ -1,8 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { EmployeeAssetService } from './employee-asset.service';
 import { CreateEmployeeAssetDto } from './dto/create-employee-asset.dto';
-import { UpdateEmployeeAssetDto } from './dto/update-employee-asset.dto';
 import { ReturnAssetDto } from './dto/return-asset.dto';
+import { EmployeeAssetService } from './employee-asset.service';
 
 @Controller('employee-assets')
 export class EmployeeAssetController {
@@ -30,6 +29,16 @@ export class EmployeeAssetController {
   ) {
     return this.employeeAssetService.findByEmployee(
       employeeId,
+    );
+  }
+
+  @Get('asset/:assetId')
+  findByAsset(
+    @Param('assetId')
+    assetId: string,
+  ) {
+    return this.employeeAssetService.findByAsset(
+      assetId,
     );
   }
 

@@ -61,6 +61,7 @@ import { EmployeeTaxProfileModule } from './modules/employee-tax-profile/employe
 import { EmployeeDeductionModule } from './modules/employee-deduction/employee-deduction.module';
 import { PayrollRunModule } from './modules/payroll-run/payroll-run.module';
 import { PayrollDashboardModule } from './modules/payroll-dashboard/payroll-dashboard.module';
+import { AssetCategoryModule } from './modules/asset-category/asset-category.module';
 
 
 @Module({
@@ -129,6 +130,7 @@ import { PayrollDashboardModule } from './modules/payroll-dashboard/payroll-dash
     EmployeeDeductionModule,
     PayrollRunModule,
     PayrollDashboardModule,
+    AssetCategoryModule,
   ],
 })
 export class AppModule {}

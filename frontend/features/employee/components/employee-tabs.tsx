@@ -6,6 +6,15 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import {
+  CalendarDays,
+  FileText,
+  Laptop,
+  Wallet,
+  History,
+} from "lucide-react";
+
+import { EmptyState } from "@/components/common/empty-state";
 
 interface EmployeeTabsProps {
   overview: React.ReactNode;
@@ -24,25 +33,48 @@ export function EmployeeTabs({
           Overview
         </TabsTrigger>
 
-        <TabsTrigger value="documents">
-          Documents
-        </TabsTrigger>
+        <TabsContent value="documents">
+        <EmptyState
+            icon={FileText}
+            title="No Documents"
+            description="No documents have been uploaded for this employee."
+            actionLabel="Upload Document"
+        />
+        </TabsContent>
 
-        <TabsTrigger value="assets">
-          Assets
-        </TabsTrigger>
+        <TabsContent value="assets">
+        <EmptyState
+            icon={Laptop}
+            title="No Assets"
+            description="No assets have been assigned to this employee."
+            actionLabel="Assign Asset"
+        />
+        </TabsContent>
 
-        <TabsTrigger value="leave">
-          Leave
-        </TabsTrigger>
+        <TabsContent value="leave">
+        <EmptyState
+            icon={CalendarDays}
+            title="No Leave Records"
+            description="Leave requests and balances will appear here."
+            actionLabel="Request Leave"
+        />
+        </TabsContent>
 
-        <TabsTrigger value="payroll">
-          Payroll
-        </TabsTrigger>
+        <TabsContent value="payroll">
+        <EmptyState
+            icon={Wallet}
+            title="No Payroll Records"
+            description="Payroll history will appear here."
+        />
+        </TabsContent>
 
-        <TabsTrigger value="timeline">
-          Timeline
-        </TabsTrigger>
+        <TabsContent value="timeline">
+        <EmptyState
+            icon={History}
+            title="No Timeline"
+            description="Employee activity will appear here."
+        />
+        </TabsContent>
       </TabsList>
 
       <TabsContent value="overview">

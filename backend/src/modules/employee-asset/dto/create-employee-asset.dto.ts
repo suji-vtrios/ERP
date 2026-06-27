@@ -1,14 +1,15 @@
 import {
+  IsUUID,
   IsString,
   IsOptional,
   IsDateString,
 } from 'class-validator';
 
 export class CreateEmployeeAssetDto {
-  @IsString()
+  @IsUUID()
   employeeId: string;
 
-  @IsString()
+  @IsUUID()
   assetId: string;
 
   @IsDateString()
