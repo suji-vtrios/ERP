@@ -1,31 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Controller } from "react-hook-form";
-
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
-
-import { useCompanies } from "@/features/lookups/hooks/use-companies";
-import { useBranches } from "@/features/lookups/hooks/use-branches";
-import { useDepartments } from "@/features/lookups/hooks/use-departments";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LookupSelect } from "@/components/forms/lookup-select";
+
+import { useCompanies } from "@/features/lookups/hooks/use-companies";
+
 import { useCreateEmployee } from "../hooks/use-create-employee";
 
 import {
-  FormSection,
-  RequiredLabel,
-} from "@/components/forms";
+  PersonalInformationSection,
+} from "./sections/personal-information-section";
 
-type EmployeeFormData = {
+import {
+  OrganizationSection,
+} from "./sections/organization-section";
+
+import { EmploymentSection } from "./sections/employment-section";
+import { useUpdateEmployee } from "../hooks/use-update-employee";
+import type { Employee } from "../types/employee";
+
+
+export type EmployeeFormData = {
   firstName: string;
   lastName: string;
   email: string;
@@ -36,18 +33,21 @@ type EmployeeFormData = {
   departmentId: string;
 
   designationId: string;
-  ManagerId: string;
+  managerId: string;
 
-  employeeTypeId: string;
+  employeeType: string;
   joiningDate: string;
 };
 
+
+
 interface EmployeeFormProps {
+  employee?: Employee | null;
   onSuccess?: () => void;
   onCancel?: () => void;
 }
-
 export function EmployeeForm({
+  employee,
   onSuccess,
   onCancel,
 }: EmployeeFormProps) {
@@ -63,182 +63,106 @@ export function EmployeeForm({
         departmentId: "",
 
         designationId: "",
-        ManagerId: "",
+        managerId: "",
 
-        employeeTypeId: "",
+        employeeType: "",
         joiningDate: "",
         },
     });
 
-    const companyId = form.watch("companyId");
-    const branchId = form.watch("branchId");
+    const isEdit = !!employee;
+
+    useEffect(() => {
+        if (!employee) {
+            form.reset();
+
+            return;
+        }
+
+        form.reset({
+            firstName: employee.firstName ?? "",
+            lastName: employee.lastName ?? "",
+            email: employee.email ?? "",
+            mobile: employee.mobile ?? "",
+
+            companyId: employee.companyId ?? "",
+            branchId: employee.branchId ?? "",
+            departmentId: employee.departmentId ?? "",
+
+            designationId: employee.designationId ?? "",
+            managerId: employee.managerId ?? "",
+
+            employeeType: employee.employeeType ?? "",
+            joiningDate: employee.joiningDate
+            ? new Date(employee.joiningDate)
+                .toISOString()
+                .split("T")[0]
+            : "",
+        });
+    }, [employee, form]);
 
     const {
         data: companies = [],
         isLoading: companiesLoading,
         } = useCompanies();
-
-        const {
-        data: branches = [],
-        isLoading: branchesLoading,
-        } = useBranches(companyId);
-
-        const {
-        data: departments = [],
-        isLoading: departmentsLoading,
-    } = useDepartments(branchId);
+    
 
     const createEmployee = useCreateEmployee();
+    const updateEmployee = useUpdateEmployee();
 
-  const onSubmit = (data: EmployeeFormData) => {
-    createEmployee.mutate(data, {
-        onSuccess: () => {
-        form.reset();
+    
+    const onSubmit = (data: EmployeeFormData) => {
+        const payload = Object.fromEntries(
+            Object.entries(data).filter(
+                ([, value]) =>
+                value !== "" &&
+                value !== null &&
+                value !== undefined,
+            ),
+        );
 
-        onSuccess?.();
-        },
-    });
+        if (isEdit && employee) {
+            updateEmployee.mutate(
+            {
+                id: employee.id,
+                data: payload,
+            },
+            {
+                onSuccess: () => {
+                form.reset();
+                onSuccess?.();
+                },
+            }
+            );
+
+            return;
+        }
+
+        createEmployee.mutate(payload, {
+            onSuccess: () => {
+            form.reset();
+            onSuccess?.();
+            },
+        });
     };
   return (
     <form
       onSubmit={form.handleSubmit(onSubmit)}
       className="space-y-8"
     >
-      <FormSection title="Personal Information">
-        <div className="grid gap-4 md:grid-cols-2">
+    <PersonalInformationSection
+        form={form}
+    />
 
-          <div className="space-y-2">
-            <RequiredLabel required>
-              First Name
-            </RequiredLabel>
+    <OrganizationSection
+        form={form}
+        companies={companies}
+        companiesLoading={companiesLoading}
+        />
 
-            <Input
-              placeholder="Enter First Name"
-              {...form.register("firstName")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <RequiredLabel>
-              Last Name
-            </RequiredLabel>
-
-            <Input
-              placeholder="Enter Last Name"
-              {...form.register("lastName")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <RequiredLabel>
-              Email
-            </RequiredLabel>
-
-            <Input
-              type="email"
-              placeholder="Enter Email"
-              {...form.register("email")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <RequiredLabel>
-              Mobile
-            </RequiredLabel>
-
-            <Input
-              placeholder="Enter Mobile Number"
-              {...form.register("mobile")}
-            />
-          </div>
-
-        </div>
-      </FormSection>
-
-      <FormSection title="Organization">
-            <div className="grid gap-4 md:grid-cols-2">
-
-                <div className="space-y-2">
-                    <RequiredLabel required>
-                        Company
-                    </RequiredLabel>
-
-                    <Controller
-                    control={form.control}
-                    name="companyId"
-                    render={({ field }) => (
-                        <LookupSelect
-                            value={field.value}
-                            onChange={(value) => {
-                                field.onChange(value);
-
-                                form.setValue("branchId", "");
-                                form.setValue("departmentId", "");
-                            }}
-                            items={companies}
-                            placeholder="Select Company"
-                            loading={companiesLoading}
-                        />
-                    )}
-                />
-                </div>
-            </div>
-
-            <div className="space-y-2">
-                <RequiredLabel required>
-                    Branch
-                </RequiredLabel>
-
-                <Controller
-                    control={form.control}
-                    name="branchId"
-                    render={({ field }) => (
-                    <LookupSelect
-                        value={field.value}
-                        onChange={(value) => {
-                        field.onChange(value);
-
-                        form.setValue("departmentId", "");
-                        }}
-                        items={branches}
-                        placeholder={
-                        companyId
-                            ? "Select Branch"
-                            : "Select Company First"
-                        }
-                        loading={branchesLoading}
-                        disabled={!companyId}
-                    />
-                    )}
-                />
-            </div>
-
-            <div className="space-y-2">
-                <RequiredLabel required>
-                    Department
-                </RequiredLabel>
-
-                <Controller
-                    control={form.control}
-                    name="departmentId"
-                    render={({ field }) => (
-                    <LookupSelect
-                        value={field.value}
-                        onChange={field.onChange}
-                        items={departments}
-                        placeholder={
-                        branchId
-                            ? "Select Department"
-                            : "Select Branch First"
-                        }
-                        loading={departmentsLoading}
-                        disabled={!branchId}
-                    />
-                    )}
-                />
-            </div>
-
-        </FormSection>
+    <EmploymentSection
+        form={form}
+    />
 
       <div className="flex justify-end gap-3 border-t pt-6">
         <Button
@@ -254,11 +178,16 @@ export function EmployeeForm({
 
         <Button
             type="submit"
-            disabled={createEmployee.isPending}
+            disabled={
+                createEmployee.isPending ||
+                updateEmployee.isPending
+            }
             >
-            {createEmployee.isPending
+            {createEmployee.isPending || updateEmployee.isPending
                 ? "Saving..."
-                : "Save Employee"}
+                : isEdit
+                    ? "Update Employee"
+                    : "Save Employee"}
         </Button>
       </div>
     </form>

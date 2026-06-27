@@ -33,6 +33,7 @@ export function EmployeeDialog({
       size="xl"
     >
       <EmployeeForm
+        employee={employee}
         onSuccess={() => onOpenChange(false)}
         onCancel={() => onOpenChange(false)}
         />

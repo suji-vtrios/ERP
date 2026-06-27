@@ -540,8 +540,8 @@ model Project {
   branchId String?
   branch   Branch? @relation(fields: [branchId], references: [id])
 
-  projectManagerId String?
-  projectManager   Employee? @relation("ProjectManager", fields: [projectManagerId], references: [id])
+  projectmanagerId String?
+  projectManager   Employee? @relation("ProjectManager", fields: [projectmanagerId], references: [id])
 
   createdBy   String?
   updatedBy   String?
@@ -554,7 +554,7 @@ model Project {
 
   @@index([companyId])
   @@index([branchId])
-  @@index([projectManagerId])
+  @@index([projectmanagerId])
   @@index([status])
   @@map("projects")
 }

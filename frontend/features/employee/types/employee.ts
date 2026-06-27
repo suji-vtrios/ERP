@@ -4,15 +4,22 @@ export interface Employee {
   employeeCode: string;
 
   firstName: string;
-
   lastName: string;
 
   email?: string;
+  mobile?: string;
 
-  phone?: string;
+  companyId: string;
+  branchId: string;
+  departmentId: string;
+
+  designationId?: string;
+  managerId?: string;
+
+  joiningDate?: string;
+  employeeType?: string;
 
   employmentStatus: string;
-
   isActive: boolean;
 
   company?: {

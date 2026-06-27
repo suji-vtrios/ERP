@@ -41,5 +41,5 @@ export class CreateProjectDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsUUID()
-  projectManagerId?: string;
+  projectmanagerId?: string;
 }

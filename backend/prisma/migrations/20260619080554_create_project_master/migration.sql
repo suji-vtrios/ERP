@@ -13,7 +13,7 @@ CREATE TABLE "projects" (
     "status" TEXT NOT NULL DEFAULT 'DRAFT',
     "companyId" TEXT NOT NULL,
     "branchId" TEXT,
-    "projectManagerId" TEXT,
+    "projectmanagerId" TEXT,
     "createdBy" TEXT,
     "updatedBy" TEXT,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -32,7 +32,7 @@ CREATE INDEX "projects_companyId_idx" ON "projects"("companyId");
 CREATE INDEX "projects_branchId_idx" ON "projects"("branchId");
 
 -- CreateIndex
-CREATE INDEX "projects_projectManagerId_idx" ON "projects"("projectManagerId");
+CREATE INDEX "projects_projectmanagerId_idx" ON "projects"("projectmanagerId");
 
 -- CreateIndex
 CREATE INDEX "projects_status_idx" ON "projects"("status");
@@ -44,4 +44,4 @@ ALTER TABLE "projects" ADD CONSTRAINT "projects_companyId_fkey" FOREIGN KEY ("co
 ALTER TABLE "projects" ADD CONSTRAINT "projects_branchId_fkey" FOREIGN KEY ("branchId") REFERENCES "branches"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "projects" ADD CONSTRAINT "projects_projectManagerId_fkey" FOREIGN KEY ("projectManagerId") REFERENCES "employees"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "projects" ADD CONSTRAINT "projects_projectmanagerId_fkey" FOREIGN KEY ("projectmanagerId") REFERENCES "employees"("id") ON DELETE SET NULL ON UPDATE CASCADE;
